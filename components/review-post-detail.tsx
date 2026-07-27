@@ -25,7 +25,7 @@ export function ReviewPostDetail({ post, metadata }: { post: ReviewPost; metadat
         <DeletePostButton postId={post.id} />
       </div>
 
-      <section className="relative w-full h-[400px] rounded-2xl overflow-hidden mb-12 shadow-xl bg-on-surface-variant">
+      <section className="relative w-full h-[280px] md:h-[400px] rounded-2xl overflow-hidden mb-12 shadow-xl bg-on-surface-variant">
         {heroImage && (
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -38,7 +38,7 @@ export function ReviewPostDetail({ post, metadata }: { post: ReviewPost; metadat
             <div className="text-secondary-fixed font-label-caps mb-2 tracking-[0.2em] uppercase">
               후기 · {dateLabel}
             </div>
-            <h1 className="text-on-primary-container font-display-lg text-display-lg leading-none">
+            <h1 className="text-on-primary-container font-display-lg text-display-lg-mobile md:text-display-lg leading-none">
               {post.title}
             </h1>
             {metadata.subtitle && (
@@ -65,7 +65,7 @@ export function ReviewPostDetail({ post, metadata }: { post: ReviewPost; metadat
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
-        <div className="lg:col-span-7 bg-surface-container-lowest p-10 rounded-xl polaroid-shadow relative overflow-hidden">
+        <div className="lg:col-span-7 bg-surface-container-lowest p-6 md:p-10 rounded-xl polaroid-shadow relative overflow-hidden">
           <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-32 h-8 bg-secondary/30 washi-tape z-10 opacity-80" />
           <div className="mb-10 text-center border-b border-outline-variant pb-6">
             <span className="font-label-caps text-secondary tracking-widest mb-1 block">JOURNAL</span>

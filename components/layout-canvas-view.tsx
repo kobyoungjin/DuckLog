@@ -8,27 +8,33 @@ export function LayoutCanvasView({ blocks }: { blocks: LayoutBlock[] }) {
   if (blocks.length === 0) return null;
 
   const canvasHeight = blocks.reduce((max, b) => Math.max(max, blockHeight(b)), 0) + 40;
+  const canvasWidth = blocks.reduce((max, b) => Math.max(max, b.x + b.width), 0) + 40;
 
   return (
-    <div className="relative w-full" style={{ height: canvasHeight }}>
-      <div className="absolute -top-3 left-8 w-20 h-5 bg-secondary/20 washi-tape rotate-[-8deg] pointer-events-none z-0" />
+    <div className="w-full overflow-x-auto">
+      <div
+        className="relative"
+        style={{ height: canvasHeight, width: canvasWidth, minWidth: "100%" }}
+      >
+        <div className="absolute -top-3 left-8 w-20 h-5 bg-secondary/20 washi-tape rotate-[-8deg] pointer-events-none z-0" />
 
-      {blocks.map((block) => (
-        <div
-          key={block.id}
-          className="absolute transition-transform duration-500 hover:!rotate-0"
-          style={{
-            left: block.x,
-            top: block.y,
-            width: block.width,
-            height: block.height,
-            transform: `rotate(${block.rotation}deg)`,
-            zIndex: block.zIndex,
-          }}
-        >
-          <BlockView block={block} />
-        </div>
-      ))}
+        {blocks.map((block) => (
+          <div
+            key={block.id}
+            className="absolute transition-transform duration-500 hover:!rotate-0"
+            style={{
+              left: block.x,
+              top: block.y,
+              width: block.width,
+              height: block.height,
+              transform: `rotate(${block.rotation}deg)`,
+              zIndex: block.zIndex,
+            }}
+          >
+            <BlockView block={block} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

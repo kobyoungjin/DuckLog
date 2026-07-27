@@ -155,13 +155,14 @@ export function LayoutCanvasEditor({
             <button
               type="button"
               onClick={() => removeBlock(block.id)}
-              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-error text-on-error text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10"
+              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-error text-on-error text-xs flex items-center justify-center z-10"
             >
               ✕
             </button>
 
             <div
               onPointerDown={(e) => startDrag(e, block, "move")}
+              style={{ touchAction: "none" }}
               className="h-5 rounded-t-lg bg-outline-variant/30 flex items-center justify-center cursor-move"
             >
               <span className="text-[10px] text-on-surface-variant select-none">⠿⠿⠿</span>
@@ -173,12 +174,14 @@ export function LayoutCanvasEditor({
 
             <div
               onPointerDown={(e) => startDrag(e, block, "rotate")}
-              className="absolute left-1/2 -top-6 -translate-x-1/2 w-4 h-4 rounded-full bg-primary cursor-grab opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ touchAction: "none" }}
+              className="absolute left-1/2 -top-6 -translate-x-1/2 w-5 h-5 rounded-full bg-primary cursor-grab"
             />
 
             <div
               onPointerDown={(e) => startDrag(e, block, "resize")}
-              className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity bg-primary rounded-tl"
+              style={{ touchAction: "none" }}
+              className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize bg-primary rounded-tl"
             />
           </div>
         ))}

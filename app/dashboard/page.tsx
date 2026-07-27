@@ -39,9 +39,9 @@ function StatCard({
 }) {
   return (
     <div
-      className={`bg-white p-4 pb-10 polaroid-shadow ${rotation} hover:rotate-0 transition-transform duration-500 cursor-default`}
+      className={`w-full max-w-[180px] mx-auto bg-white p-3 pb-6 polaroid-shadow ${rotation} hover:rotate-0 transition-transform duration-500 cursor-default`}
     >
-      <div className="aspect-square bg-surface-container-high mb-4 overflow-hidden relative group">
+      <div className="aspect-square bg-surface-container-high mb-3 overflow-hidden relative group">
         {thumbnail ? (
           // external, user-submitted URLs — next/image would require allow-listing every domain
           // eslint-disable-next-line @next/next/no-img-element
@@ -111,7 +111,7 @@ export default function DashboardPage() {
         <div className="absolute -top-8 -left-4 w-24 h-6 bg-secondary/20 washi-tape rotate-[-12deg] z-10" />
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="font-display-lg text-display-lg text-primary mb-2 italic">
+            <h1 className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-2 italic">
               어서오세요, 집사님.
             </h1>
             <p className="font-body-lg text-body-lg text-on-surface-variant scribble-underline inline-block">

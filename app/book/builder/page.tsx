@@ -163,7 +163,7 @@ export default function BookBuilderPage() {
             {selectedPosts.map((post, i) => (
               <div
                 key={post.id}
-                className="grid grid-cols-2 bg-white border border-outline-variant rounded-lg overflow-hidden polaroid-shadow"
+                className="grid grid-cols-1 sm:grid-cols-2 bg-white border border-outline-variant rounded-lg overflow-hidden polaroid-shadow"
               >
                 <div className="bg-surface-container-high flex items-center justify-center min-h-[200px]">
                   {post.images[0] ? (
