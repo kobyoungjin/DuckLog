@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PostCategory {
+  IDOL
+  MUSICAL
+  SPORTS
+  GOODS
+  REVIEW
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  nickname     String
+  email        String?  @unique
+  passwordHash String?
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+
+  posts  Post[]
+  orders Order[]
+}
+
+model Post {
+  id        String       @id @default(cuid())
+  userId    String
+  category  PostCategory
+  title     String
+  content   String
+  date      DateTime
+  images    String[]
+  metadata  Json?
+  layout    Json?
+  createdAt DateTime     @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  userId    String
+  bookTitle String
+  status    OrderStatus @default(PENDING)
+  postIds   String[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

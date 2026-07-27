@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+.paper-texture {
+  background-image: url("https://www.transparenttextures.com/patterns/natural-paper.png");
+}
+
+.washi-tape {
+  mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L5 3 L10 0 L15 4 L20 1 L25 5 L30 0 L35 3 L40 1 L45 4 L50 0 L55 3 L60 1 L65 5 L70 0 L75 3 L80 1 L85 4 L90 0 L95 3 L100 0 V20 H0 Z" fill="black"/></svg>');
+  -webkit-mask-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 20" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 L5 3 L10 0 L15 4 L20 1 L25 5 L30 0 L35 3 L40 1 L45 4 L50 0 L55 3 L60 1 L65 5 L70 0 L75 3 L80 1 L85 4 L90 0 L95 3 L100 0 V20 H0 Z" fill="black"/></svg>');
+}
+
+.polaroid-shadow {
+  box-shadow: 0px 4px 20px rgba(62, 54, 46, 0.08);
+}
+
+.rotated-left {
+  transform: rotate(-1.5deg);
+}
+
+.rotated-right {
+  transform: rotate(1.2deg);
+}
+
+.scribble-underline {
+  background: linear-gradient(180deg, transparent 80%, rgba(125, 86, 45, 0.2) 0);
+}
+
+.notebook-line {
+  background-image: linear-gradient(to bottom, transparent 31px, #d1c4bb 32px);
+  background-size: 100% 32px;
+}
