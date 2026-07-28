@@ -86,7 +86,13 @@ export function CalendarView({ posts }: { posts: Post[] }) {
           return (
             <Link
               key={key}
-              href={hasPosts ? `/posts/${dayPosts[0].id}` : "#"}
+              href={
+                dayPosts.length === 1
+                  ? `/posts/${dayPosts[0].id}`
+                  : hasPosts
+                    ? `/days/${key}`
+                    : "#"
+              }
               aria-disabled={!hasPosts}
               className={`aspect-square rounded-lg border p-1 flex flex-col bg-white transition-colors ${
                 hasPosts

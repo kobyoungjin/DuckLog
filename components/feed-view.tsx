@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CATEGORY_LABELS, type PostCategory } from "@/lib/category";
+import { stripHtml } from "@/lib/html";
 
 type Post = {
   id: string;
@@ -36,7 +37,9 @@ export function FeedView({ posts }: { posts: Post[] }) {
             <p className="font-annotation-sm text-on-surface-variant mt-1">
               {post.date.slice(0, 10)}
             </p>
-            <p className="font-body-md text-on-surface-variant mt-2 line-clamp-3">{post.content}</p>
+            <p className="font-body-md text-on-surface-variant mt-2 line-clamp-3">
+              {stripHtml(post.content)}
+            </p>
           </div>
         </Link>
       ))}

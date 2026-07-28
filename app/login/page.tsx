@@ -51,9 +51,9 @@ export default function LoginPage() {
         className="space-y-5 bg-white p-8 rounded-xl polaroid-shadow"
       >
         <div>
-          <label className={labelClass}>이메일</label>
+          <label className={labelClass}>아이디</label>
           <input
-            type="email"
+            type="text"
             required
             autoComplete="username"
             value={email}

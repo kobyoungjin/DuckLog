@@ -10,6 +10,7 @@ type Order = {
   bookTitle: string;
   status: OrderStatus;
   postIds: string[];
+  photocardIds: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -36,6 +37,7 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -78,14 +80,49 @@ export default function AdminPage() {
     }
   }
 
+  async function deleteOrder(order: Order) {
+    if (!confirm(`"${order.bookTitle}" 주문을 삭제할까요? 되돌릴 수 없습니다.`)) return;
+
+    setDeletingId(order.id);
+    const res = await fetch(`/api/orders/${order.id}`, { method: "DELETE" });
+    setDeletingId(null);
+
+    if (res.status === 401) {
+      router.push("/login");
+      return;
+    }
+
+    if (res.ok) {
+      setOrders((prev) => prev.filter((o) => o.id !== order.id));
+    }
+  }
+
   function exportJSON() {
     downloadFile("orders.json", JSON.stringify(orders, null, 2), "application/json");
   }
 
   function exportCSV() {
-    const header = ["id", "userId", "bookTitle", "status", "postIds", "createdAt", "updatedAt"];
+    const header = [
+      "id",
+      "userId",
+      "bookTitle",
+      "status",
+      "postIds",
+      "photocardIds",
+      "createdAt",
+      "updatedAt",
+    ];
     const rows = orders.map((o) =>
-      [o.id, o.userId, o.bookTitle, o.status, o.postIds.join(";"), o.createdAt, o.updatedAt]
+      [
+        o.id,
+        o.userId,
+        o.bookTitle,
+        o.status,
+        o.postIds.join(";"),
+        o.photocardIds.join(";"),
+        o.createdAt,
+        o.updatedAt,
+      ]
         .map((v) => csvEscape(String(v)))
         .join(",")
     );
@@ -129,9 +166,10 @@ export default function AdminPage() {
               <tr className="text-left border-b border-outline-variant/40">
                 <th className="py-3 px-4 font-label-caps text-on-surface-variant">주문일시</th>
                 <th className="py-3 px-4 font-label-caps text-on-surface-variant">책 제목</th>
-                <th className="py-3 px-4 font-label-caps text-on-surface-variant">포함 기록 수</th>
+                <th className="py-3 px-4 font-label-caps text-on-surface-variant">포함 항목</th>
                 <th className="py-3 px-4 font-label-caps text-on-surface-variant">상태</th>
                 <th className="py-3 px-4 font-label-caps text-on-surface-variant">액션</th>
+                <th className="py-3 px-4 font-label-caps text-on-surface-variant text-right">삭제</th>
               </tr>
             </thead>
             <tbody>
@@ -141,7 +179,10 @@ export default function AdminPage() {
                   <tr key={order.id} className="border-b border-outline-variant/20">
                     <td className="py-3 px-4 text-on-surface-variant">{order.createdAt.slice(0, 10)}</td>
                     <td className="py-3 px-4 text-on-surface font-bold">{order.bookTitle}</td>
-                    <td className="py-3 px-4 text-on-surface-variant">{order.postIds.length}</td>
+                    <td className="py-3 px-4 text-on-surface-variant">
+                      {order.postIds.length}개 기록
+                      {order.photocardIds.length > 0 && ` · ${order.photocardIds.length}장 포토카드`}
+                    </td>
                     <td className="py-3 px-4">
                       <span className="font-label-caps text-secondary text-xs px-2 py-1 bg-secondary-fixed rounded">
                         {ORDER_STATUS_LABELS[order.status]}
@@ -159,6 +200,15 @@ export default function AdminPage() {
                       ) : (
                         <span className="text-xs text-on-surface-variant">완료됨</span>
                       )}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button
+                        onClick={() => deleteOrder(order)}
+                        disabled={deletingId === order.id}
+                        className="px-3 py-1 text-xs font-label-caps rounded-full border border-error text-error disabled:opacity-50 hover:bg-error/10"
+                      >
+                        {deletingId === order.id ? "삭제 중..." : "삭제"}
+                      </button>
                     </td>
                   </tr>
                 );

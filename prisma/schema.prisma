@@ -34,8 +34,9 @@ model User {
   role         Role     @default(USER)
   createdAt    DateTime @default(now())
 
-  posts  Post[]
-  orders Order[]
+  posts      Post[]
+  orders     Order[]
+  photocards Photocard[]
 }
 
 model Post {
@@ -55,14 +56,29 @@ model Post {
   @@index([userId])
 }
 
-model Order {
-  id        String      @id @default(cuid())
+model Photocard {
+  id        String   @id @default(cuid())
   userId    String
-  bookTitle String
-  status    OrderStatus @default(PENDING)
-  postIds   String[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  imageUrl  String
+  name      String?
+  memo      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  bookTitle     String
+  status        OrderStatus @default(PENDING)
+  postIds       String[]    @default([])
+  photocardIds  String[]    @default([])
+  pages         Json?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

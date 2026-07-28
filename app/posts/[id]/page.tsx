@@ -7,6 +7,7 @@ import { ReviewPostDetail } from "@/components/review-post-detail";
 import type { ReviewMetadata } from "@/lib/post-metadata";
 import { LayoutCanvasView } from "@/components/layout-canvas-view";
 import type { LayoutBlock } from "@/lib/layout-blocks";
+import { sanitizeHtml } from "@/lib/html";
 
 export default async function PostDetailPage({ params }: { params: { id: string } }) {
   const post = await prisma.post.findUnique({ where: { id: params.id } });
@@ -65,7 +66,10 @@ export default async function PostDetailPage({ params }: { params: { id: string 
             </div>
           )}
 
-          <p className="font-body-md text-on-surface whitespace-pre-wrap">{post.content}</p>
+          <div
+            className="font-body-md text-on-surface"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
+          />
         </>
       )}
 
@@ -80,8 +84,8 @@ export default async function PostDetailPage({ params }: { params: { id: string 
         </dl>
       )}
 
-      <Link href="/dashboard" className="inline-block font-label-caps text-secondary hover:underline">
-        ← 대시보드로
+      <Link href="/" className="inline-block font-label-caps text-secondary hover:underline">
+        ← 홈으로
       </Link>
     </div>
   );

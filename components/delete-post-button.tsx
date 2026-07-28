@@ -14,7 +14,7 @@ export function DeletePostButton({ postId }: { postId: string }) {
     const res = await fetch(`/api/posts/${postId}`, { method: "DELETE" });
 
     if (res.ok) {
-      router.push("/dashboard");
+      router.push("/");
       router.refresh();
       return;
     }

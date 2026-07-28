@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DeletePostButton } from "@/components/delete-post-button";
 import type { ReviewMetadata } from "@/lib/post-metadata";
+import { sanitizeHtml } from "@/lib/html";
 
 type ReviewPost = {
   id: string;
@@ -71,11 +72,10 @@ export function ReviewPostDetail({ post, metadata }: { post: ReviewPost; metadat
             <span className="font-label-caps text-secondary tracking-widest mb-1 block">JOURNAL</span>
             <h2 className="font-headline-md text-headline-md text-on-surface">{post.title}</h2>
           </div>
-          <div className="notebook-line space-y-8 text-on-surface-variant font-body-lg text-body-lg leading-loose min-h-[300px]">
-            {post.content.split("\n").map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
-            ))}
-          </div>
+          <div
+            className="notebook-line text-on-surface-variant font-body-lg text-body-lg leading-loose min-h-[300px]"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(post.content) }}
+          />
         </div>
 
         <div className="lg:col-span-5 space-y-8">
@@ -145,10 +145,10 @@ export function ReviewPostDetail({ post, metadata }: { post: ReviewPost; metadat
       )}
 
       <Link
-        href="/dashboard"
+        href="/"
         className="inline-block mt-12 font-label-caps text-secondary hover:underline"
       >
-        ← 대시보드로
+        ← 홈으로
       </Link>
     </div>
   );

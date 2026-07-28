@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "대시보드", icon: "menu_book" },
+  { href: "/", label: "홈", icon: "menu_book" },
   { href: "/reviews", label: "후기", icon: "rate_review" },
+  { href: "/photocards", label: "포토카드", icon: "collections" },
   { href: "/book/builder", label: "책 만들기", icon: "auto_stories" },
-  { href: "/admin", label: "관리자", icon: "inventory_2" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -16,16 +16,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-container-padding-mobile md:px-container-padding-desktop py-4 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 shadow-sm">
-        <Link href="/dashboard" className="font-headline-md text-headline-md text-primary">
+        <Link href="/" className="font-headline-md text-headline-md text-primary">
           DuckLog
         </Link>
         <div className="flex items-center gap-4">
-          <span className="material-symbols-outlined text-primary cursor-pointer hover:scale-110 transition-transform">
-            settings
-          </span>
-          <div className="w-10 h-10 rounded-full border-2 border-primary-fixed bg-secondary-container flex items-center justify-center font-label-caps text-on-secondary-container">
-            G
-          </div>
+          <Link
+            href="/profile"
+            className="flex items-center gap-1.5 text-on-surface-variant hover:text-primary transition-colors"
+          >
+            <span className="material-symbols-outlined text-lg">account_circle</span>
+            <span className="hidden sm:inline font-body-md text-sm">마이페이지</span>
+          </Link>
+
+          <Link
+            href="/admin"
+            className="flex items-center gap-1.5 text-on-surface-variant hover:text-primary transition-colors"
+          >
+            <span className="material-symbols-outlined text-lg">admin_panel_settings</span>
+            <span className="hidden sm:inline font-body-md text-sm">관리자모드</span>
+          </Link>
         </div>
       </header>
 
@@ -33,7 +42,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="max-w-[1120px] mx-auto">
           <nav className="flex items-center gap-2 overflow-x-auto md:flex-wrap mb-10 pb-1 -mx-1 px-1">
             {NAV_ITEMS.map((item) => {
-              const active = pathname?.startsWith(item.href);
+              const active =
+                item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href);
               return (
                 <Link
                   key={item.href}

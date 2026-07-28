@@ -41,3 +41,19 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   return NextResponse.json(order);
 }
+
+export async function DELETE(request: NextRequest, { params }: Params) {
+  const session = await getSessionFromRequest(request);
+  if (!session || session.role !== "ADMIN") {
+    return NextResponse.json({ error: "관리자만 주문을 삭제할 수 있습니다." }, { status: 401 });
+  }
+
+  const existing = await prisma.order.findUnique({ where: { id: params.id } });
+  if (!existing) {
+    return NextResponse.json({ error: "Order not found" }, { status: 404 });
+  }
+
+  await prisma.order.delete({ where: { id: params.id } });
+
+  return NextResponse.json({ success: true });
+}
