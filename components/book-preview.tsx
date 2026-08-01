@@ -18,6 +18,8 @@ type Post = {
 type Photocard = {
   id: string;
   imageUrl: string;
+  positionX: number;
+  positionY: number;
   name: string | null;
 };
 
@@ -98,7 +100,12 @@ function PhotocardsPageView({ cards }: { cards: Photocard[] }) {
             <div key={card.id} className="text-center w-40">
               <div className="aspect-[3/4] bg-surface-container-high rounded overflow-hidden polaroid-shadow">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={card.imageUrl} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={card.imageUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: `${card.positionX}% ${card.positionY}%` }}
+                />
               </div>
               {card.name && (
                 <p className="mt-1 font-annotation-sm text-on-surface-variant">{card.name}</p>
@@ -195,11 +202,11 @@ export function BookPreview({
         펼침면으로 넘겨보며 완성된 책을 확인해보세요.
       </p>
 
-      <div className="flex justify-center gap-1 max-w-4xl mx-auto bg-surface-container-low p-2 rounded-xl">
-        <div className="flex flex-1 min-h-[420px] max-h-[65vh] shadow-2xl rounded-l-lg overflow-hidden border-r border-outline-variant/50">
+      <div className="flex flex-col sm:flex-row gap-1 max-w-4xl mx-auto bg-surface-container-low p-2 rounded-xl">
+        <div className="flex flex-1 min-h-[360px] sm:min-h-[420px] max-h-[50vh] sm:max-h-[65vh] shadow-2xl rounded-t-lg sm:rounded-t-none sm:rounded-l-lg overflow-hidden border-b sm:border-b-0 sm:border-r border-outline-variant/50">
           {renderPage(leftPage)}
         </div>
-        <div className="flex flex-1 min-h-[420px] max-h-[65vh] shadow-2xl rounded-r-lg overflow-hidden">
+        <div className="flex flex-1 min-h-[360px] sm:min-h-[420px] max-h-[50vh] sm:max-h-[65vh] shadow-2xl rounded-b-lg sm:rounded-b-none sm:rounded-r-lg overflow-hidden">
           {renderPage(rightPage)}
         </div>
       </div>

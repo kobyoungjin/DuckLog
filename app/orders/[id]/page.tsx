@@ -144,7 +144,12 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                 <div className="aspect-[3/4] bg-surface-container-high rounded overflow-hidden">
                   {/* external, user-submitted URLs — next/image would require allow-listing every domain */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={card.imageUrl} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={card.imageUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                    style={{ objectPosition: `${card.positionX}% ${card.positionY}%` }}
+                  />
                 </div>
                 {card.name && (
                   <p className="mt-2 text-center font-annotation-sm text-on-surface-variant">

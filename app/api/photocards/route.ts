@@ -7,6 +7,10 @@ export async function GET() {
   return NextResponse.json(photocards);
 }
 
+function clampPosition(value: unknown, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : fallback;
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
 
@@ -20,6 +24,8 @@ export async function POST(request: NextRequest) {
     data: {
       userId: user.id,
       imageUrl: body.imageUrl.trim(),
+      positionX: clampPosition(body.positionX, 50),
+      positionY: clampPosition(body.positionY, 50),
       name: typeof body.name === "string" && body.name.trim() ? body.name.trim() : null,
       memo: typeof body.memo === "string" && body.memo.trim() ? body.memo.trim() : null,
     },

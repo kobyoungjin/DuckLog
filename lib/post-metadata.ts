@@ -9,3 +9,18 @@ export type ReviewMetadata = {
   passType?: string;
   highlights?: ReviewHighlight[];
 };
+
+export type DiaryRating = {
+  label: string;
+  value: number;
+  max?: number;
+  icon?: "star" | "favorite" | "palette";
+};
+
+export type DiaryMetadata = {
+  subtitle?: string;
+  location?: string;
+  ratings?: DiaryRating[];
+  note?: string;
+  tags?: string[];
+};

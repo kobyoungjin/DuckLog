@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { CATEGORY_LIST } from "@/lib/category";
+import { POST_STYLE_LIST } from "@/lib/post-style";
 
 type Params = { params: { id: string } };
 
@@ -26,10 +27,13 @@ export async function PUT(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Post not found" }, { status: 404 });
   }
 
-  const { category, title, content, date, images, metadata, layout } = body;
+  const { category, style, title, content, date, images, metadata, layout } = body;
 
   if (category !== undefined && !CATEGORY_LIST.includes(category)) {
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+  }
+  if (style !== undefined && !POST_STYLE_LIST.includes(style)) {
+    return NextResponse.json({ error: "Invalid style" }, { status: 400 });
   }
   if (date !== undefined && Number.isNaN(Date.parse(date))) {
     return NextResponse.json({ error: "Invalid date" }, { status: 400 });
@@ -39,6 +43,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
     where: { id: params.id },
     data: {
       ...(category !== undefined ? { category } : {}),
+      ...(style !== undefined ? { style } : {}),
       ...(title !== undefined ? { title } : {}),
       ...(content !== undefined ? { content } : {}),
       ...(date !== undefined ? { date: new Date(date) } : {}),

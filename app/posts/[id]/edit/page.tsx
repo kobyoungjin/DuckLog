@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { PostForm } from "@/components/post-form";
 import type { PostCategory } from "@/lib/category";
+import type { PostStyle } from "@/lib/post-style";
+import type { ReviewMetadata, DiaryMetadata } from "@/lib/post-metadata";
 
 export default async function EditPostPage({ params }: { params: { id: string } }) {
   const post = await prisma.post.findUnique({ where: { id: params.id } });
@@ -18,10 +20,12 @@ export default async function EditPostPage({ params }: { params: { id: string } 
         postId={post.id}
         initialData={{
           category: post.category as PostCategory,
+          style: post.style as PostStyle,
           title: post.title,
           content: post.content,
           date: post.date.toISOString().slice(0, 10),
           images: post.images,
+          metadata: (post.metadata ?? {}) as ReviewMetadata & DiaryMetadata,
         }}
       />
     </div>

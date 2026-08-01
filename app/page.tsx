@@ -25,22 +25,34 @@ type Order = {
   createdAt: string;
 };
 
+type Photocard = {
+  id: string;
+  imageUrl: string;
+  positionX: number;
+  positionY: number;
+};
+
 type ViewMode = "calendar" | "feed";
 
 function StatCard({
   label,
   value,
   thumbnail,
+  thumbnailPosition,
   rotation,
+  href,
 }: {
   label: string;
   value: number;
   thumbnail?: string;
+  thumbnailPosition?: { x: number; y: number };
   rotation: string;
+  href: string;
 }) {
   return (
-    <div
-      className={`bg-white p-4 pb-10 polaroid-shadow ${rotation} hover:rotate-0 transition-transform duration-500 cursor-default`}
+    <Link
+      href={href}
+      className={`block bg-white p-4 pb-10 polaroid-shadow ${rotation} hover:rotate-0 hover:-translate-y-1 transition-all duration-500`}
     >
       <div className="aspect-square bg-surface-container-high mb-4 overflow-hidden relative group">
         {thumbnail ? (
@@ -50,6 +62,11 @@ function StatCard({
             src={thumbnail}
             alt=""
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            style={
+              thumbnailPosition
+                ? { objectPosition: `${thumbnailPosition.x}% ${thumbnailPosition.y}%` }
+                : undefined
+            }
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -63,13 +80,14 @@ function StatCard({
           {label}
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
 export default function HomePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [photocards, setPhotocards] = useState<Photocard[]>([]);
   const [view, setView] = useState<ViewMode>("calendar");
   const [loading, setLoading] = useState(true);
 
@@ -77,10 +95,12 @@ export default function HomePage() {
     Promise.all([
       fetch("/api/posts").then((res) => res.json()),
       fetch("/api/orders").then((res) => res.json()),
+      fetch("/api/photocards").then((res) => res.json()),
     ])
-      .then(([postsData, ordersData]) => {
+      .then(([postsData, ordersData, photocardsData]) => {
         setPosts(postsData);
         setOrders(ordersData);
+        setPhotocards(photocardsData);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -94,7 +114,6 @@ export default function HomePage() {
       }),
     [posts, today]
   );
-  const totalImages = useMemo(() => posts.reduce((sum, p) => sum + p.images.length, 0), [posts]);
   const inProgressOrders = useMemo(
     () => orders.filter((o) => o.status !== "COMPLETED").slice(0, 3),
     [orders]
@@ -109,20 +128,25 @@ export default function HomePage() {
   return (
     <div>
       <section className="mb-16 relative">
-        <div className="absolute -top-8 -left-4 w-24 h-6 bg-secondary/20 washi-tape rotate-[-12deg] z-10" />
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <h1 className="font-display-lg text-display-lg-mobile md:text-display-lg text-primary mb-2 italic">
-              어서오세요, 집사님.
-            </h1>
-            <p className="font-body-lg text-body-lg text-on-surface-variant scribble-underline inline-block">
-              이번 달 새로운 기록 {thisMonthPosts.length}개를 남겼어요.
-            </p>
+        <div className="flex justify-end mb-3">
+          <div className="text-right">
+            <span className="font-label-caps text-secondary text-xs">오늘은 </span>
+            <span className="font-headline-md text-on-secondary-container text-sm">
+              {formattedDate}
+            </span>
           </div>
-          <div className="text-right hidden md:block">
-            <div className="font-label-caps text-secondary">오늘은</div>
-            <div className="font-headline-md text-on-secondary-container">{formattedDate}</div>
-          </div>
+        </div>
+
+        <div className="relative bg-surface-container-low border border-outline-variant/40 rounded-2xl px-6 py-10 md:px-10 md:py-12 text-center">
+          <div className="absolute -top-3 -left-3 w-24 h-6 bg-secondary/20 washi-tape rotate-[-12deg] z-10" />
+
+          <h1 className="font-display-kr text-display-lg-mobile md:text-display-lg text-primary mb-3">
+            어서오세요, 집사님.
+          </h1>
+
+          <p className="font-body-lg text-body-lg text-on-surface-variant">
+            이번 달 새로운 기록 {thisMonthPosts.length}개를 남겼어요.
+          </p>
         </div>
       </section>
 
@@ -132,18 +156,24 @@ export default function HomePage() {
           value={thisMonthPosts.length}
           thumbnail={thisMonthPosts.find((p) => p.images.length > 0)?.images[0]}
           rotation="rotated-left"
+          href="/reviews"
         />
         <StatCard
           label="총 기록"
           value={posts.length}
           thumbnail={posts.find((p) => p.images.length > 0)?.images[0]}
           rotation="rotated-right"
+          href="/reviews"
         />
         <StatCard
           label="보관된 사진"
-          value={totalImages}
-          thumbnail={posts.find((p) => p.images.length > 0)?.images[0]}
+          value={photocards.length}
+          thumbnail={photocards[0]?.imageUrl}
+          thumbnailPosition={
+            photocards[0] ? { x: photocards[0].positionX, y: photocards[0].positionY } : undefined
+          }
           rotation="-rotate-1"
+          href="/photocards"
         />
       </div>
 
@@ -186,7 +216,7 @@ export default function HomePage() {
           )}
 
           <Link
-            href="/admin"
+            href="/profile"
             className="mt-8 text-secondary font-label-caps flex items-center gap-2 hover:translate-x-2 transition-transform"
           >
             전체 주문 보기 <span className="material-symbols-outlined text-sm">arrow_forward</span>

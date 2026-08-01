@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { CATEGORY_LABELS, type PostCategory } from "@/lib/category";
 import { DeletePostButton } from "@/components/delete-post-button";
 import { ReviewPostDetail } from "@/components/review-post-detail";
-import type { ReviewMetadata } from "@/lib/post-metadata";
+import { DiaryPostDetail } from "@/components/diary-post-detail";
+import type { ReviewMetadata, DiaryMetadata } from "@/lib/post-metadata";
 import { LayoutCanvasView } from "@/components/layout-canvas-view";
 import type { LayoutBlock } from "@/lib/layout-blocks";
 import { sanitizeHtml } from "@/lib/html";
@@ -16,9 +17,15 @@ export default async function PostDetailPage({ params }: { params: { id: string 
     notFound();
   }
 
-  if (post.category === "REVIEW") {
+  if (post.style === "REVIEW") {
     return (
       <ReviewPostDetail post={post} metadata={(post.metadata ?? {}) as ReviewMetadata} />
+    );
+  }
+
+  if (post.style === "DIARY") {
+    return (
+      <DiaryPostDetail post={post} metadata={(post.metadata ?? {}) as DiaryMetadata} />
     );
   }
 

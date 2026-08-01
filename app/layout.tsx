@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Libre_Caslon_Text, Source_Serif_4, Bricolage_Grotesque } from "next/font/google";
+import { Libre_Caslon_Text, Source_Serif_4, Bricolage_Grotesque, Noto_Serif_KR } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import "./globals.css";
 
@@ -22,6 +22,14 @@ const bricolage = Bricolage_Grotesque({
   variable: "--font-bricolage",
 });
 
+// Latin-only fonts above don't include Hangul glyphs, so Korean headline
+// text (e.g. the home page greeting) needs its own font with a Korean subset.
+const notoSerifKr = Noto_Serif_KR({
+  subsets: ["latin"],
+  weight: ["500"],
+  variable: "--font-noto-serif-kr",
+});
+
 export const metadata: Metadata = {
   title: "DuckLog",
   description: "팬덤/취미 기록 및 실물 책 출판 주문 서비스",
@@ -35,7 +43,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className={`${libreCaslon.variable} ${sourceSerif.variable} ${bricolage.variable}`}
+      className={`${libreCaslon.variable} ${sourceSerif.variable} ${bricolage.variable} ${notoSerifKr.variable}`}
     >
       <head>
         <link

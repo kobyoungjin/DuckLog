@@ -20,6 +20,8 @@ type Post = {
 type Photocard = {
   id: string;
   imageUrl: string;
+  positionX: number;
+  positionY: number;
   name: string | null;
 };
 
@@ -110,7 +112,12 @@ function ArrangePhotocardsGrid({ cards }: { cards: Photocard[] }) {
               className="aspect-[3/4] bg-surface-container-high rounded overflow-hidden"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={card.imageUrl} alt="" className="w-full h-full object-cover" />
+              <img
+                src={card.imageUrl}
+                alt=""
+                className="w-full h-full object-cover"
+                style={{ objectPosition: `${card.positionX}% ${card.positionY}%` }}
+              />
             </div>
           ))}
         </div>
@@ -128,6 +135,7 @@ function ArrangeSlot({
   onDragStart,
   onDrop,
   onSplit,
+  onHandleTap,
 }: {
   page: BookPage;
   index: number;
@@ -137,6 +145,7 @@ function ArrangeSlot({
   onDragStart: (index: number) => void;
   onDrop: (index: number) => void;
   onSplit: (pageId: string) => void;
+  onHandleTap: (index: number) => void;
 }) {
   const post = page.type === "post" ? posts.find((p) => p.id === page.postId) : null;
   const cards =
@@ -145,6 +154,7 @@ function ArrangeSlot({
           .map((id) => photocards.find((c) => c.id === id))
           .filter((c): c is Photocard => Boolean(c))
       : [];
+  const picked = dragIndex === index;
 
   return (
     <div
@@ -153,12 +163,22 @@ function ArrangeSlot({
       onDragOver={(e) => e.preventDefault()}
       onDrop={() => onDrop(index)}
       className={`relative flex-1 min-h-0 bg-white p-4 flex flex-col gap-2 cursor-move transition-opacity overflow-hidden ${
-        dragIndex === index ? "opacity-40" : ""
+        picked ? "opacity-40" : ""
       }`}
     >
-      <span className="absolute top-1.5 left-1.5 material-symbols-outlined text-base text-on-surface-variant bg-white/80 rounded-full z-10">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onHandleTap(index);
+        }}
+        aria-label="페이지 이동"
+        className={`absolute top-1.5 left-1.5 w-7 h-7 flex items-center justify-center rounded-full z-10 material-symbols-outlined text-base transition-colors ${
+          picked ? "bg-primary text-on-primary" : "bg-white/80 text-on-surface-variant"
+        }`}
+      >
         drag_indicator
-      </span>
+      </button>
       <span className="absolute top-1.5 right-1.5 font-label-caps text-[10px] bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center z-10">
         {index + 1}
       </span>
@@ -195,6 +215,9 @@ export default function BookBuilderPage() {
   const [selectedPhotocardOrder, setSelectedPhotocardOrder] = useState<string[]>([]);
   const [pages, setPages] = useState<BookPage[]>([]);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragNewItem, setDragNewItem] = useState<{ kind: "post" | "photocard"; id: string } | null>(
+    null
+  );
   const [arrangeSpreadIndex, setArrangeSpreadIndex] = useState(0);
   const [bookTitle, setBookTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -215,8 +238,8 @@ export default function BookBuilderPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // keep `pages` (the arrangement) in sync with what's checked in steps 1 & 2,
-  // while preserving any custom order/merges the user has already made in step 3
+  // deselecting an item in steps 1/2 removes it from the book, but selecting one
+  // does NOT auto-place it — the book starts blank and fills up via drag in step 3
   useEffect(() => {
     setPages((prev) => {
       let next = prev.filter((p) => p.type !== "post" || selectedPostOrder.includes(p.postId));
@@ -229,39 +252,23 @@ export default function BookBuilderPage() {
         )
         .filter((p) => p.type !== "photocards" || p.photocardIds.length > 0);
 
-      const existingPostIds = new Set(
-        next.filter((p): p is Extract<BookPage, { type: "post" }> => p.type === "post").map((p) => p.postId)
-      );
-      for (const postId of selectedPostOrder) {
-        if (!existingPostIds.has(postId)) {
-          next = [...next, { id: `post-${postId}`, type: "post", postId }];
-        }
-      }
-
-      const existingPhotocardIds = new Set(
-        next
-          .filter((p): p is Extract<BookPage, { type: "photocards" }> => p.type === "photocards")
-          .flatMap((p) => p.photocardIds)
-      );
-      for (const cardId of selectedPhotocardOrder) {
-        if (!existingPhotocardIds.has(cardId)) {
-          next = [...next, { id: `pc-${cardId}-${Date.now()}`, type: "photocards", photocardIds: [cardId] }];
-        }
-      }
-
       return next;
     });
   }, [selectedPostOrder, selectedPhotocardOrder]);
 
-  // [cover, pages[0]] is the first spread, then pages pair up two-per-spread from there
+  // reserved page slots = every selected item; unfilled ones render as blank
+  // drop targets until the user drags something into them
+  const totalSlots = selectedPostOrder.length + selectedPhotocardOrder.length;
+
+  // [cover, slot0] opens the book, then slots pair up two-per-spread from there
   const arrangeSpreads = useMemo(() => {
     const result: [number | "cover", number | null][] = [];
-    result.push(["cover", pages.length > 0 ? 0 : null]);
-    for (let i = 1; i < pages.length; i += 2) {
-      result.push([i, i + 1 < pages.length ? i + 1 : null]);
+    result.push(["cover", totalSlots > 0 ? 0 : null]);
+    for (let i = 1; i < totalSlots; i += 2) {
+      result.push([i, i + 1 < totalSlots ? i + 1 : null]);
     }
     return result;
-  }, [pages.length]);
+  }, [totalSlots]);
 
   useEffect(() => {
     setArrangeSpreadIndex((i) => Math.min(i, arrangeSpreads.length - 1));
@@ -280,6 +287,7 @@ export default function BookBuilderPage() {
   }
 
   function handleDragStart(index: number) {
+    setDragNewItem(null);
     setDragIndex(index);
   }
 
@@ -293,10 +301,60 @@ export default function BookBuilderPage() {
 
   function startDragFromTray(kind: "post" | "photocard", id: string) {
     const index = resolvePageIndex(kind, id);
-    if (index !== -1) handleDragStart(index);
+    if (index !== -1) {
+      handleDragStart(index);
+    } else {
+      // not placed on any page yet — pick it up fresh from the tray
+      setDragIndex(null);
+      setDragNewItem({ kind, id });
+    }
+  }
+
+  function cancelPick() {
+    setDragIndex(null);
+    setDragNewItem(null);
+  }
+
+  // tap-to-pick-then-place: a touch-friendly alternative to native drag-and-drop,
+  // which never fires on touch screens. Tap a handle to pick it up, tap another
+  // slot to drop it there, or tap the same handle again to cancel.
+  function handleSlotTap(index: number) {
+    if (dragIndex === null && dragNewItem === null) {
+      handleDragStart(index);
+    } else if (dragIndex === index) {
+      cancelPick();
+    } else {
+      handleDrop(index);
+    }
+  }
+
+  function newBookPage(item: { kind: "post" | "photocard"; id: string }): BookPage {
+    return item.kind === "post"
+      ? { id: `post-${item.id}`, type: "post", postId: item.id }
+      : { id: `pc-${item.id}-${Date.now()}`, type: "photocards", photocardIds: [item.id] };
   }
 
   function handleDrop(dropIndex: number) {
+    if (dragNewItem) {
+      const item = dragNewItem;
+      setDragNewItem(null);
+      setPages((prev) => {
+        if (dropIndex >= prev.length) {
+          return [...prev, newBookPage(item)];
+        }
+        const target = prev[dropIndex];
+        const next = [...prev];
+        if (target.type === "photocards" && item.kind === "photocard") {
+          next[dropIndex] = { ...target, photocardIds: [...target.photocardIds, item.id] };
+        } else {
+          // replaces whatever was in that slot — its item just goes back to unplaced
+          next[dropIndex] = newBookPage(item);
+        }
+        return next;
+      });
+      return;
+    }
+
     if (dragIndex === null || dragIndex === dropIndex) {
       setDragIndex(null);
       return;
@@ -305,7 +363,7 @@ export default function BookBuilderPage() {
     const draggedPage = pages[dragIndex];
     const targetPage = pages[dropIndex];
 
-    if (draggedPage.type === "photocards" && targetPage.type === "photocards") {
+    if (targetPage && draggedPage.type === "photocards" && targetPage.type === "photocards") {
       setPages((prev) => {
         const merged: BookPage = {
           ...targetPage,
@@ -349,8 +407,48 @@ export default function BookBuilderPage() {
           {bookTitle || "제목 없음"}
         </h1>
         <p className="font-annotation-sm text-on-surface-variant mt-2">
-          {pages.length > 0 ? `총 ${pages.length}페이지` : "아직 선택된 항목이 없어요."}
+          {totalSlots > 0 ? `${pages.length} / ${totalSlots}페이지 완성` : "아직 선택된 항목이 없어요."}
         </p>
+      </div>
+    );
+  }
+
+  // idx < pages.length is a filled page; idx up to totalSlots-1 is a blank,
+  // fillable drop target
+  function renderSlot(idx: number) {
+    if (idx < pages.length) {
+      return (
+        <ArrangeSlot
+          key={pages[idx].id}
+          page={pages[idx]}
+          index={idx}
+          posts={posts}
+          photocards={photocards}
+          dragIndex={dragIndex}
+          onDragStart={handleDragStart}
+          onDrop={handleDrop}
+          onSplit={splitPage}
+          onHandleTap={handleSlotTap}
+        />
+      );
+    }
+
+    const picking = dragIndex !== null || dragNewItem !== null;
+    return (
+      <div
+        key={`blank-${idx}`}
+        role={picking ? "button" : undefined}
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={() => handleDrop(idx)}
+        onClick={() => picking && handleDrop(idx)}
+        className={`flex-1 bg-white flex flex-col items-center justify-center gap-2 text-center px-4 transition-colors ${
+          picking ? "cursor-pointer bg-secondary-fixed/30" : ""
+        }`}
+      >
+        <span className="material-symbols-outlined text-outline text-2xl">add</span>
+        <span className="font-annotation-sm text-on-surface-variant">
+          {picking ? "여기에 놓기" : "기록이나 포토카드를 드래그해서 채워보세요"}
+        </span>
       </div>
     );
   }
@@ -556,7 +654,12 @@ export default function BookBuilderPage() {
                     </div>
                     <div className="w-full aspect-[3/4] bg-surface-container-high rounded overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={card.imageUrl} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={card.imageUrl}
+                        alt=""
+                        className="w-full h-full object-cover"
+                        style={{ objectPosition: `${card.positionX}% ${card.positionY}%` }}
+                      />
                     </div>
                     {card.name && (
                       <p className="font-annotation-sm text-on-surface-variant text-center truncate">
@@ -575,64 +678,34 @@ export default function BookBuilderPage() {
         <section>
           <div className="flex items-center gap-3 mb-2">
             <h2 className="font-headline-md text-headline-md text-primary">
-              책 구성하기 ({pages.length}페이지)
+              책 구성하기 ({pages.length}/{totalSlots}페이지)
             </h2>
             <div className="h-[1px] flex-1 bg-outline-variant/40" />
           </div>
 
-          {pages.length === 0 ? (
+          {totalSlots === 0 ? (
             <p className="text-on-surface-variant">
               선택된 항목이 없어요. 이전 단계에서 기록이나 포토카드를 먼저 선택해주세요.
             </p>
           ) : (
             <>
               <p className="font-annotation-sm text-on-surface-variant mb-4">
-                펼침면으로 넘겨보며 실제 책처럼 페이지를 꾸며보세요. 카드를 드래그해서 순서를 바꾸거나,
-                포토카드끼리 서로 포개면 한 페이지에 여러 장을 모을 수 있어요. 기록과 포토카드는 순서
-                상관없이 자유롭게 섞을 수 있어요.
+                책은 빈 페이지로 시작해요. 아래 목록의 기록이나 포토카드를 원하는 페이지 자리로
+                드래그하면 채워지고, 포토카드끼리 겹치면 한 페이지에 여러 장을 모을 수 있어요.{" "}
+                {dragIndex !== null || dragNewItem !== null
+                  ? "이동할 위치를 탭하세요 (다시 탭하면 취소돼요)."
+                  : "휴대폰에서는 항목이나 페이지 손잡이(⠿)를 탭한 뒤, 놓을 위치를 다시 탭해도 채워져요."}
               </p>
 
               {(() => {
                 const [leftSlot, rightSlot] = arrangeSpreads[arrangeSpreadIndex] ?? ["cover", null];
                 return (
-                  <div className="flex justify-center gap-1 max-w-3xl mx-auto bg-surface-container-low p-2 rounded-xl">
-                    <div className="flex flex-1 min-h-[420px] max-h-[65vh] shadow-2xl rounded-l-lg overflow-hidden border-r border-outline-variant/50">
-                      {leftSlot === "cover" ? (
-                        renderCoverSlot()
-                      ) : (
-                        <ArrangeSlot
-                          key={pages[leftSlot].id}
-                          page={pages[leftSlot]}
-                          index={leftSlot}
-                          posts={posts}
-                          photocards={photocards}
-                          dragIndex={dragIndex}
-                          onDragStart={handleDragStart}
-                          onDrop={handleDrop}
-                          onSplit={splitPage}
-                        />
-                      )}
+                  <div className="flex flex-col sm:flex-row gap-1 max-w-3xl mx-auto bg-surface-container-low p-2 rounded-xl">
+                    <div className="flex flex-1 min-h-[360px] sm:min-h-[420px] max-h-[50vh] sm:max-h-[65vh] shadow-2xl rounded-t-lg sm:rounded-t-none sm:rounded-l-lg overflow-hidden border-b sm:border-b-0 sm:border-r border-outline-variant/50">
+                      {leftSlot === "cover" ? renderCoverSlot() : renderSlot(leftSlot)}
                     </div>
-                    <div className="flex flex-1 min-h-[420px] max-h-[65vh] shadow-2xl rounded-r-lg overflow-hidden">
-                      {rightSlot === null ? (
-                        <div
-                          className="flex-1 bg-white"
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={() => handleDrop(pages.length)}
-                        />
-                      ) : (
-                        <ArrangeSlot
-                          key={pages[rightSlot].id}
-                          page={pages[rightSlot]}
-                          index={rightSlot}
-                          posts={posts}
-                          photocards={photocards}
-                          dragIndex={dragIndex}
-                          onDragStart={handleDragStart}
-                          onDrop={handleDrop}
-                          onSplit={splitPage}
-                        />
-                      )}
+                    <div className="flex flex-1 min-h-[360px] sm:min-h-[420px] max-h-[50vh] sm:max-h-[65vh] shadow-2xl rounded-b-lg sm:rounded-b-none sm:rounded-r-lg overflow-hidden">
+                      {rightSlot === null ? <div className="flex-1 bg-white" /> : renderSlot(rightSlot)}
                     </div>
                   </div>
                 );
@@ -664,22 +737,27 @@ export default function BookBuilderPage() {
 
               <div className="mt-8">
                 <p className="font-annotation-sm text-on-surface-variant mb-2">
-                  아래에서 기록이나 포토카드를 책 위로 드래그하면 지금 펼쳐진 페이지 자리로 옮길 수
-                  있어요.
+                  아래 목록에서 아직 배치하지 않은 항목은 진하게, 이미 배치된 항목은 흐리게 표시돼요.
+                  드래그하거나(또는 탭한 뒤 페이지 자리를 다시 탭해서) 책 위로 옮겨보세요.
                 </p>
                 <div className="flex flex-wrap gap-2 bg-surface-container-low p-3 rounded-xl">
                   {posts
                     .filter((post) => selectedPostOrder.includes(post.id))
                     .map((post) => {
                       const pageIndex = resolvePageIndex("post", post.id);
+                      const picked =
+                        (dragIndex !== null && dragIndex === pageIndex) ||
+                        (dragNewItem?.kind === "post" && dragNewItem.id === post.id);
+                      const placed = pageIndex !== -1;
                       return (
                         <div
                           key={post.id}
                           draggable
                           onDragStart={() => startDragFromTray("post", post.id)}
+                          onClick={() => (picked ? cancelPick() : startDragFromTray("post", post.id))}
                           title={post.title}
-                          className={`w-14 h-14 rounded overflow-hidden bg-surface-container-high border border-outline-variant cursor-move flex items-center justify-center transition-opacity ${
-                            dragIndex !== null && dragIndex === pageIndex ? "opacity-40" : ""
+                          className={`relative w-14 h-14 rounded overflow-hidden bg-surface-container-high border cursor-pointer flex items-center justify-center transition-opacity ${
+                            picked ? "opacity-40 border-primary" : placed ? "opacity-50 border-outline-variant" : "border-outline-variant"
                           }`}
                         >
                           {post.images[0] ? (
@@ -697,18 +775,30 @@ export default function BookBuilderPage() {
                     .filter((card) => selectedPhotocardOrder.includes(card.id))
                     .map((card) => {
                       const pageIndex = resolvePageIndex("photocard", card.id);
+                      const picked =
+                        (dragIndex !== null && dragIndex === pageIndex) ||
+                        (dragNewItem?.kind === "photocard" && dragNewItem.id === card.id);
+                      const placed = pageIndex !== -1;
                       return (
                         <div
                           key={card.id}
                           draggable
                           onDragStart={() => startDragFromTray("photocard", card.id)}
+                          onClick={() =>
+                            picked ? cancelPick() : startDragFromTray("photocard", card.id)
+                          }
                           title={card.name ?? undefined}
-                          className={`w-14 h-14 rounded overflow-hidden bg-surface-container-high border border-outline-variant cursor-move transition-opacity ${
-                            dragIndex !== null && dragIndex === pageIndex ? "opacity-40" : ""
+                          className={`w-14 h-14 rounded overflow-hidden bg-surface-container-high border cursor-pointer transition-opacity ${
+                            picked ? "opacity-40 border-primary" : placed ? "opacity-50 border-outline-variant" : "border-outline-variant"
                           }`}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={card.imageUrl} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={card.imageUrl}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            style={{ objectPosition: `${card.positionX}% ${card.positionY}%` }}
+                          />
                         </div>
                       );
                     })}

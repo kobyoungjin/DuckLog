@@ -15,6 +15,12 @@ enum PostCategory {
   REVIEW
 }
 
+enum PostStyle {
+  DC
+  REVIEW
+  DIARY
+}
+
 enum OrderStatus {
   PENDING
   PROCESSING
@@ -35,6 +41,7 @@ model Post {
   id        String       @id @default(cuid())
   userId    String
   category  PostCategory
+  style     PostStyle    @default(DC)
   title     String
   content   String
   date      DateTime
@@ -52,6 +59,8 @@ model Photocard {
   id        String   @id @default(cuid())
   userId    String
   imageUrl  String
+  positionX Float    @default(50)
+  positionY Float    @default(50)
   name      String?
   memo      String?
   createdAt DateTime @default(now())

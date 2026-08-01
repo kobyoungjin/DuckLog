@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { DeletePostButton } from "@/components/delete-post-button";
 import type { ReviewMetadata } from "@/lib/post-metadata";
@@ -12,10 +16,51 @@ type ReviewPost = {
 };
 
 export function ReviewPostDetail({ post, metadata }: { post: ReviewPost; metadata: ReviewMetadata }) {
+  const router = useRouter();
   const [heroImage, ...restImages] = post.images;
   const stackImages = restImages.slice(0, 2);
   const galleryImages = restImages.slice(2);
   const dateLabel = post.date.toISOString().slice(0, 10);
+
+  const [editingHero, setEditingHero] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [title, setTitle] = useState(post.title);
+  const [subtitle, setSubtitle] = useState(metadata.subtitle ?? "");
+  const [seat, setSeat] = useState(metadata.seat ?? "");
+  const [passType, setPassType] = useState(metadata.passType ?? "");
+
+  function cancelHeroEdit() {
+    setTitle(post.title);
+    setSubtitle(metadata.subtitle ?? "");
+    setSeat(metadata.seat ?? "");
+    setPassType(metadata.passType ?? "");
+    setEditingHero(false);
+  }
+
+  async function saveHeroEdit() {
+    setSaving(true);
+    const res = await fetch(`/api/posts/${post.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title,
+        metadata: {
+          ...metadata,
+          subtitle: subtitle.trim() || undefined,
+          seat: seat.trim() || undefined,
+          passType: passType.trim() || undefined,
+        },
+      }),
+    });
+    setSaving(false);
+
+    if (res.ok) {
+      setEditingHero(false);
+      router.refresh();
+    } else {
+      alert("저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
+  }
 
   return (
     <div>
@@ -26,7 +71,7 @@ export function ReviewPostDetail({ post, metadata }: { post: ReviewPost; metadat
         <DeletePostButton postId={post.id} />
       </div>
 
-      <section className="relative w-full h-[280px] md:h-[400px] rounded-2xl overflow-hidden mb-12 shadow-xl bg-on-surface-variant">
+      <section className="relative w-full h-[280px] md:h-[400px] rounded-2xl overflow-hidden mb-12 shadow-xl bg-on-surface-variant group">
         {heroImage && (
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -34,33 +79,101 @@ export function ReviewPostDetail({ post, metadata }: { post: ReviewPost; metadat
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-on-background via-on-background/40 to-transparent" />
+
+        {!editingHero && (
+          <button
+            type="button"
+            onClick={() => setEditingHero(true)}
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-on-surface/30 backdrop-blur-md text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="이 화면 바로 편집"
+          >
+            <span className="material-symbols-outlined text-lg">edit</span>
+          </button>
+        )}
+
         <div className="absolute bottom-0 left-0 p-8 md:p-12 w-full flex flex-col md:flex-row justify-between items-end gap-6">
-          <div>
-            <div className="text-secondary-fixed font-label-caps mb-2 tracking-[0.2em] uppercase">
-              후기 · {dateLabel}
-            </div>
-            <h1 className="text-on-primary-container font-display-lg text-display-lg-mobile md:text-display-lg leading-none">
-              {post.title}
-            </h1>
-            {metadata.subtitle && (
-              <p className="text-surface-variant font-annotation-sm mt-2 max-w-lg italic opacity-90">
-                {metadata.subtitle}
-              </p>
-            )}
-          </div>
-          {(metadata.seat || metadata.passType) && (
-            <div className="flex gap-3">
-              {metadata.seat && (
-                <span className="px-4 py-2 bg-on-surface/20 backdrop-blur-md border border-white/20 text-white rounded-full text-xs font-label-caps tracking-widest">
-                  {metadata.seat}
+          {editingHero ? (
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-secondary-fixed font-label-caps tracking-[0.2em] uppercase shrink-0">
+                  후기 · {dateLabel}
                 </span>
-              )}
-              {metadata.passType && (
-                <span className="px-4 py-2 bg-secondary-container/80 text-on-secondary-container rounded-full text-xs font-label-caps tracking-widest">
-                  {metadata.passType}
-                </span>
-              )}
+              </div>
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="제목"
+                className="w-full bg-transparent border-b border-white/40 text-on-primary-container font-display-lg text-display-lg-mobile md:text-display-lg leading-none placeholder:text-white/40 focus:outline-none focus:border-white"
+              />
+              <input
+                value={subtitle}
+                onChange={(e) => setSubtitle(e.target.value)}
+                placeholder="부제 (선택)"
+                className="w-full max-w-lg bg-transparent border-b border-white/30 text-surface-variant font-annotation-sm italic placeholder:text-white/30 focus:outline-none focus:border-white"
+              />
+              <div className="flex flex-wrap gap-3 pt-1">
+                <input
+                  value={seat}
+                  onChange={(e) => setSeat(e.target.value)}
+                  placeholder="좌석 (선택)"
+                  className="px-4 py-2 bg-on-surface/20 backdrop-blur-md border border-white/20 text-white rounded-full text-xs font-label-caps tracking-widest placeholder:text-white/40 focus:outline-none focus:border-white w-32"
+                />
+                <input
+                  value={passType}
+                  onChange={(e) => setPassType(e.target.value)}
+                  placeholder="티켓 종류 (선택)"
+                  className="px-4 py-2 bg-secondary-container/60 text-on-secondary-container rounded-full text-xs font-label-caps tracking-widest placeholder:text-on-secondary-container/50 focus:outline-none w-36"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={saveHeroEdit}
+                  disabled={saving}
+                  className="px-4 py-1.5 rounded-full bg-secondary text-on-secondary font-label-caps text-xs disabled:opacity-50"
+                >
+                  {saving ? "저장 중..." : "저장"}
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelHeroEdit}
+                  disabled={saving}
+                  className="px-4 py-1.5 rounded-full border border-white/40 text-white font-label-caps text-xs disabled:opacity-50"
+                >
+                  취소
+                </button>
+              </div>
             </div>
+          ) : (
+            <>
+              <div>
+                <div className="text-secondary-fixed font-label-caps mb-2 tracking-[0.2em] uppercase">
+                  후기 · {dateLabel}
+                </div>
+                <h1 className="text-on-primary-container font-display-lg text-display-lg-mobile md:text-display-lg leading-none">
+                  {title}
+                </h1>
+                {subtitle && (
+                  <p className="text-surface-variant font-annotation-sm mt-2 max-w-lg italic opacity-90">
+                    {subtitle}
+                  </p>
+                )}
+              </div>
+              {(seat || passType) && (
+                <div className="flex gap-3">
+                  {seat && (
+                    <span className="px-4 py-2 bg-on-surface/20 backdrop-blur-md border border-white/20 text-white rounded-full text-xs font-label-caps tracking-widest">
+                      {seat}
+                    </span>
+                  )}
+                  {passType && (
+                    <span className="px-4 py-2 bg-secondary-container/80 text-on-secondary-container rounded-full text-xs font-label-caps tracking-widest">
+                      {passType}
+                    </span>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
@@ -70,7 +183,7 @@ export function ReviewPostDetail({ post, metadata }: { post: ReviewPost; metadat
           <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-32 h-8 bg-secondary/30 washi-tape z-10 opacity-80" />
           <div className="mb-10 text-center border-b border-outline-variant pb-6">
             <span className="font-label-caps text-secondary tracking-widest mb-1 block">JOURNAL</span>
-            <h2 className="font-headline-md text-headline-md text-on-surface">{post.title}</h2>
+            <h2 className="font-headline-md text-headline-md text-on-surface">{title}</h2>
           </div>
           <div
             className="notebook-line text-on-surface-variant font-body-lg text-body-lg leading-loose min-h-[300px]"

@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { PhotocardPositionPicker } from "@/components/photocard-position-picker";
 
 type Photocard = {
   id: string;
   imageUrl: string;
+  positionX: number;
+  positionY: number;
   name: string | null;
   memo: string | null;
   createdAt: string;
@@ -16,6 +19,8 @@ export default function PhotocardsPage() {
   const [name, setName] = useState("");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [positioningQueue, setPositioningQueue] = useState<string[]>([]);
+  const [positioningIndex, setPositioningIndex] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -33,7 +38,7 @@ export default function PhotocardsPage() {
     setUploading(true);
     setError(null);
 
-    const created: Photocard[] = [];
+    const uploadedUrls: string[] = [];
     let failedCount = 0;
 
     for (const file of files) {
@@ -47,29 +52,57 @@ export default function PhotocardsPage() {
       }
 
       const { url } = await uploadRes.json();
-
-      const res = await fetch("/api/photocards", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: url, name }),
-      });
-
-      if (res.ok) {
-        created.push(await res.json());
-      } else {
-        failedCount++;
-      }
+      uploadedUrls.push(url);
     }
 
     setUploading(false);
 
-    if (created.length > 0) {
-      setCards((prev) => [...created, ...prev]);
-      setName("");
-    }
     if (failedCount > 0) {
-      setError(`${failedCount}개 항목 등록에 실패했습니다.`);
+      setError(`${failedCount}개 항목 업로드에 실패했습니다.`);
     }
+
+    if (uploadedUrls.length > 0) {
+      setPositioningQueue(uploadedUrls);
+      setPositioningIndex(0);
+    }
+  }
+
+  async function createPhotocard(imageUrl: string, positionX: number, positionY: number) {
+    const res = await fetch("/api/photocards", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageUrl, positionX, positionY, name }),
+    });
+
+    if (res.ok) {
+      const created: Photocard = await res.json();
+      setCards((prev) => [created, ...prev]);
+    } else {
+      setError("일부 항목 등록에 실패했습니다.");
+    }
+  }
+
+  function advancePositioningQueue() {
+    setPositioningIndex((i) => {
+      if (i + 1 >= positioningQueue.length) {
+        setPositioningQueue([]);
+        setName("");
+        return 0;
+      }
+      return i + 1;
+    });
+  }
+
+  async function handlePositionConfirm(position: { positionX: number; positionY: number }) {
+    const imageUrl = positioningQueue[positioningIndex];
+    await createPhotocard(imageUrl, position.positionX, position.positionY);
+    advancePositioningQueue();
+  }
+
+  async function handlePositionSkip() {
+    const imageUrl = positioningQueue[positioningIndex];
+    await createPhotocard(imageUrl, 50, 50);
+    advancePositioningQueue();
   }
 
   async function handleDelete(id: string) {
@@ -140,7 +173,12 @@ export default function PhotocardsPage() {
               <div className="aspect-[3/4] bg-surface-container-high overflow-hidden">
                 {/* external, user-submitted URLs — next/image would require allow-listing every domain */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={card.imageUrl} alt="" className="w-full h-full object-cover" />
+                <img
+                  src={card.imageUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  style={{ objectPosition: `${card.positionX}% ${card.positionY}%` }}
+                />
               </div>
               {card.name && (
                 <p className="mt-2 text-center font-annotation-sm text-on-surface-variant">
@@ -150,6 +188,19 @@ export default function PhotocardsPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {positioningQueue.length > 0 && (
+        <PhotocardPositionPicker
+          imageUrl={positioningQueue[positioningIndex]}
+          stepLabel={
+            positioningQueue.length > 1
+              ? `${positioningIndex + 1} / ${positioningQueue.length}`
+              : undefined
+          }
+          onConfirm={handlePositionConfirm}
+          onSkip={handlePositionSkip}
+        />
       )}
     </div>
   );

@@ -1,33 +1,72 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { CATEGORY_LABELS, CATEGORY_LIST, type PostCategory } from "@/lib/category";
 
-export default async function ReviewsPage() {
-  const reviews = await prisma.post.findMany({
-    where: { category: "REVIEW" },
+const FILTERS: { key: PostCategory | "ALL"; label: string }[] = [
+  { key: "ALL", label: "전체" },
+  ...CATEGORY_LIST.map((category) => ({ key: category, label: CATEGORY_LABELS[category] })),
+];
+
+export default async function RecordsPage({
+  searchParams,
+}: {
+  searchParams: { category?: string };
+}) {
+  const requested = searchParams.category;
+  const filter = CATEGORY_LIST.includes(requested as PostCategory)
+    ? (requested as PostCategory)
+    : "ALL";
+
+  const posts = await prisma.post.findMany({
+    where: filter === "ALL" ? {} : { category: filter },
     orderBy: { date: "desc" },
   });
 
   return (
     <div>
-      <div className="flex items-center gap-4 mb-10">
-        <h1 className="font-headline-md text-headline-md text-primary">후기 모아보기</h1>
+      <div className="flex items-center gap-4 mb-6 flex-wrap">
+        <h1 className="font-headline-md text-headline-md text-primary">기록 모아보기</h1>
         <div className="h-px flex-1 bg-outline-variant/30" />
-        <span className="font-annotation-sm text-on-surface-variant">{reviews.length}개</span>
+        <span className="font-annotation-sm text-on-surface-variant">{posts.length}개</span>
       </div>
 
-      {reviews.length === 0 ? (
+      <div className="flex items-center gap-2 mb-10 overflow-x-auto pb-1 -mx-1 px-1">
+        {FILTERS.map((f) => {
+          const active = f.key === filter;
+          const href = f.key === "ALL" ? "/reviews" : `/reviews?category=${f.key}`;
+          return (
+            <Link
+              key={f.key}
+              href={href}
+              className={`flex-shrink-0 px-4 py-2 rounded-full font-label-caps text-sm whitespace-nowrap transition-colors ${
+                active
+                  ? "bg-secondary-container/50 text-on-secondary-container"
+                  : "border border-outline-variant text-on-surface-variant hover:bg-surface-variant/40"
+              }`}
+            >
+              {f.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {posts.length === 0 ? (
         <div className="text-center py-24">
-          <p className="font-body-md text-on-surface-variant mb-4">아직 작성된 후기가 없어요.</p>
+          <p className="font-body-md text-on-surface-variant mb-4">
+            {filter === "ALL"
+              ? "아직 작성된 기록이 없어요."
+              : `아직 작성된 ${CATEGORY_LABELS[filter]} 기록이 없어요.`}
+          </p>
           <Link
             href="/posts/new"
             className="inline-block px-6 py-2 rounded-lg bg-primary text-on-primary font-label-caps shadow-sm hover:brightness-110 active:scale-95 transition-all"
           >
-            후기 작성하러 가기
+            기록 작성하러 가기
           </Link>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {reviews.map((post, i) => (
+          {posts.map((post, i) => (
             <Link
               key={post.id}
               href={`/posts/${post.id}`}
@@ -48,7 +87,10 @@ export default async function ReviewsPage() {
                   </div>
                 )}
               </div>
-              <p className="mt-3 text-center font-annotation-sm text-on-surface-variant truncate px-1">
+              <span className="mt-3 block text-center font-label-caps text-secondary text-[10px]">
+                {CATEGORY_LABELS[post.category as PostCategory]}
+              </span>
+              <p className="text-center font-annotation-sm text-on-surface-variant truncate px-1">
                 {post.title}
               </p>
               <p className="text-center font-annotation-sm text-outline">

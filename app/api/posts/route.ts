@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/current-user";
 import { CATEGORY_LIST } from "@/lib/category";
+import { POST_STYLE_LIST } from "@/lib/post-style";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -48,10 +49,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { category, title, content, date, images, metadata, layout } = body;
+  const { category, style, title, content, date, images, metadata, layout } = body;
 
   if (!category || !CATEGORY_LIST.includes(category)) {
     return NextResponse.json({ error: "Invalid or missing category" }, { status: 400 });
+  }
+  if (style !== undefined && !POST_STYLE_LIST.includes(style)) {
+    return NextResponse.json({ error: "Invalid style" }, { status: 400 });
   }
   if (!title || typeof title !== "string") {
     return NextResponse.json({ error: "title is required" }, { status: 400 });
@@ -69,6 +73,7 @@ export async function POST(request: NextRequest) {
     data: {
       userId: user.id,
       category,
+      style: style ?? undefined,
       title,
       content,
       date: new Date(date),

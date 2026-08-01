@@ -77,6 +77,7 @@ const config: Config = {
         "body-lg": ["var(--font-source-serif)"],
         "headline-md": ["var(--font-libre-caslon)"],
         "display-lg": ["var(--font-libre-caslon)"],
+        "display-kr": ["var(--font-noto-serif-kr)"],
       },
       fontSize: {
         "label-caps": ["12px", { lineHeight: "16px", letterSpacing: "0.1em", fontWeight: "600" }],
