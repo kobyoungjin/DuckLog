@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ORDER_STATUS_SEQUENCE, nextOrderStatus, type OrderStatus } from "@/lib/order-status";
-import { getSessionFromRequest } from "@/lib/auth";
 
 type Params = { params: { id: string } };
 
 export async function PATCH(request: NextRequest, { params }: Params) {
-  const session = await getSessionFromRequest(request);
-  if (!session || session.role !== "ADMIN") {
-    return NextResponse.json({ error: "관리자만 주문 상태를 변경할 수 있습니다." }, { status: 401 });
-  }
-
   const body = await request.json().catch(() => null);
 
   if (!body || typeof body !== "object" || typeof body.status !== "string") {
@@ -42,12 +36,7 @@ export async function PATCH(request: NextRequest, { params }: Params) {
   return NextResponse.json(order);
 }
 
-export async function DELETE(request: NextRequest, { params }: Params) {
-  const session = await getSessionFromRequest(request);
-  if (!session || session.role !== "ADMIN") {
-    return NextResponse.json({ error: "관리자만 주문을 삭제할 수 있습니다." }, { status: 401 });
-  }
-
+export async function DELETE(_request: NextRequest, { params }: Params) {
   const existing = await prisma.order.findUnique({ where: { id: params.id } });
   if (!existing) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 });

@@ -3,9 +3,8 @@ import { prisma } from "@/lib/prisma";
 const DEMO_NICKNAME = "guest";
 
 /**
- * Auth is not implemented yet (Lv1 scope covers the post CRUD flow only).
- * Every request acts as a single shared demo user so Post.userId can be set;
- * replace this with real session lookup once auth lands.
+ * This is a single-user personal app with no login — every request acts as
+ * one shared demo user so Post/Order/Photocard.userId can be set.
  */
 export async function getCurrentUser() {
   const existing = await prisma.user.findFirst({ where: { nickname: DEMO_NICKNAME } });

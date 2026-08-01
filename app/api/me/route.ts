@@ -2,13 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/current-user";
 
-function toSafeUser(user: { id: string; nickname: string; createdAt: Date }) {
-  return { id: user.id, nickname: user.nickname, createdAt: user.createdAt };
-}
-
 export async function GET() {
   const user = await getCurrentUser();
-  return NextResponse.json(toSafeUser(user));
+  return NextResponse.json(user);
 }
 
 export async function PATCH(request: NextRequest) {
@@ -25,5 +21,5 @@ export async function PATCH(request: NextRequest) {
     data: { nickname: body.nickname.trim() },
   });
 
-  return NextResponse.json(toSafeUser(updated));
+  return NextResponse.json(updated);
 }

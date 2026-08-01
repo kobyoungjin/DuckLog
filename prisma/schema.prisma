@@ -21,18 +21,10 @@ enum OrderStatus {
   COMPLETED
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
 model User {
-  id           String   @id @default(cuid())
-  nickname     String
-  email        String?  @unique
-  passwordHash String?
-  role         Role     @default(USER)
-  createdAt    DateTime @default(now())
+  id        String   @id @default(cuid())
+  nickname  String
+  createdAt DateTime @default(now())
 
   posts      Post[]
   orders     Order[]

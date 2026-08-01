@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/current-user";
 import { NicknameForm } from "@/components/nickname-form";
+import { OrderCancelButton } from "@/components/order-cancel-button";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_SEQUENCE, type OrderStatus } from "@/lib/order-status";
 
 export default async function ProfilePage() {
@@ -65,53 +66,62 @@ export default async function ProfilePage() {
               const status = order.status as OrderStatus;
               const currentStep = ORDER_STATUS_SEQUENCE.indexOf(status);
               return (
-                <Link
+                <div
                   key={order.id}
-                  href={`/orders/${order.id}`}
-                  className="block p-5 bg-white rounded-xl polaroid-shadow border border-outline-variant/40 hover:-translate-y-0.5 transition-transform"
+                  className="p-5 bg-white rounded-xl polaroid-shadow border border-outline-variant/40 hover:-translate-y-0.5 transition-transform"
                 >
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="font-body-lg font-bold text-on-surface">{order.bookTitle}</h3>
-                      <p className="font-annotation-sm text-on-surface-variant mt-1">
-                        {order.createdAt.toISOString().slice(0, 10)} · {order.postIds.length}개 기록
-                        {order.photocardIds.length > 0 &&
-                          ` · ${order.photocardIds.length}장 포토카드`}
-                      </p>
-                    </div>
-                    <span className="font-label-caps text-secondary text-xs px-2 py-1 bg-secondary-fixed rounded">
-                      {ORDER_STATUS_LABELS[status]}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center">
-                    {ORDER_STATUS_SEQUENCE.map((step, i) => (
-                      <div key={step} className="flex items-center flex-1 last:flex-none">
-                        <div className="flex flex-col items-center gap-1">
-                          <div
-                            className={`w-3 h-3 rounded-full ${
-                              i <= currentStep ? "bg-primary" : "bg-outline-variant"
-                            }`}
-                          />
-                          <span
-                            className={`font-annotation-sm whitespace-nowrap ${
-                              i <= currentStep ? "text-on-surface" : "text-outline"
-                            }`}
-                          >
-                            {ORDER_STATUS_LABELS[step]}
-                          </span>
-                        </div>
-                        {i < ORDER_STATUS_SEQUENCE.length - 1 && (
-                          <div
-                            className={`h-[2px] flex-1 mx-2 ${
-                              i < currentStep ? "bg-primary" : "bg-outline-variant"
-                            }`}
-                          />
-                        )}
+                  <Link href={`/orders/${order.id}`} className="block">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="font-body-lg font-bold text-on-surface">{order.bookTitle}</h3>
+                        <p className="font-annotation-sm text-on-surface-variant mt-1">
+                          {order.createdAt.toISOString().slice(0, 10)} · {order.postIds.length}개 기록
+                          {order.photocardIds.length > 0 &&
+                            ` · ${order.photocardIds.length}장 포토카드`}
+                        </p>
                       </div>
-                    ))}
+                      <span className="font-label-caps text-secondary text-xs px-2 py-1 bg-secondary-fixed rounded">
+                        {ORDER_STATUS_LABELS[status]}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center">
+                      {ORDER_STATUS_SEQUENCE.map((step, i) => (
+                        <div key={step} className="flex items-center flex-1 last:flex-none">
+                          <div className="flex flex-col items-center gap-1">
+                            <div
+                              className={`w-3 h-3 rounded-full ${
+                                i <= currentStep ? "bg-primary" : "bg-outline-variant"
+                              }`}
+                            />
+                            <span
+                              className={`font-annotation-sm whitespace-nowrap ${
+                                i <= currentStep ? "text-on-surface" : "text-outline"
+                              }`}
+                            >
+                              {ORDER_STATUS_LABELS[step]}
+                            </span>
+                          </div>
+                          {i < ORDER_STATUS_SEQUENCE.length - 1 && (
+                            <div
+                              className={`h-[2px] flex-1 mx-2 ${
+                                i < currentStep ? "bg-primary" : "bg-outline-variant"
+                              }`}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </Link>
+
+                  <div className="mt-3">
+                    <OrderCancelButton
+                      orderId={order.id}
+                      bookTitle={order.bookTitle}
+                      cancelable={status === "PENDING"}
+                    />
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>

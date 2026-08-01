@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CATEGORY_LABELS, type PostCategory } from "@/lib/category";
 import { ORDER_STATUS_LABELS, ORDER_STATUS_SEQUENCE, type OrderStatus } from "@/lib/order-status";
+import { OrderCancelButton } from "@/components/order-cancel-button";
 
 export default async function OrderDetailPage({ params }: { params: { id: string } }) {
   const order = await prisma.order.findUnique({ where: { id: params.id } });
@@ -74,9 +75,17 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           ))}
         </div>
 
-        <p className="font-annotation-sm text-on-surface-variant border-t border-outline-variant/40 pt-4">
-          최근 업데이트 {order.updatedAt.toISOString().slice(0, 10)}
-        </p>
+        <div className="flex items-center justify-between border-t border-outline-variant/40 pt-4">
+          <p className="font-annotation-sm text-on-surface-variant">
+            최근 업데이트 {order.updatedAt.toISOString().slice(0, 10)}
+          </p>
+          <OrderCancelButton
+            orderId={order.id}
+            bookTitle={order.bookTitle}
+            cancelable={status === "PENDING"}
+            redirectTo="/profile"
+          />
+        </div>
       </div>
 
       {posts.length > 0 && (

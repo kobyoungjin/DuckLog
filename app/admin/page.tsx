@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ORDER_STATUS_LABELS, nextOrderStatus, type OrderStatus } from "@/lib/order-status";
 
 type Order = {
@@ -33,17 +32,10 @@ function downloadFile(filename: string, content: string, mimeType: string) {
 }
 
 export default function AdminPage() {
-  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
-  }
 
   useEffect(() => {
     loadOrders();
@@ -69,11 +61,6 @@ export default function AdminPage() {
     });
     setUpdatingId(null);
 
-    if (res.status === 401) {
-      router.push("/login");
-      return;
-    }
-
     if (res.ok) {
       const updated = await res.json();
       setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
@@ -86,11 +73,6 @@ export default function AdminPage() {
     setDeletingId(order.id);
     const res = await fetch(`/api/orders/${order.id}`, { method: "DELETE" });
     setDeletingId(null);
-
-    if (res.status === 401) {
-      router.push("/login");
-      return;
-    }
 
     if (res.ok) {
       setOrders((prev) => prev.filter((o) => o.id !== order.id));
@@ -145,12 +127,6 @@ export default function AdminPage() {
             className="px-4 py-1.5 text-sm font-label-caps border border-outline-variant rounded-full text-on-surface-variant hover:bg-surface-variant/40"
           >
             CSV 다운로드
-          </button>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-1.5 text-sm font-label-caps border border-outline-variant rounded-full text-error hover:bg-error/10"
-          >
-            로그아웃
           </button>
         </div>
       </div>
