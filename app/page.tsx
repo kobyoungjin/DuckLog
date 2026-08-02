@@ -150,6 +150,37 @@ export default function HomePage() {
         </div>
       </section>
 
+      {!loading && posts.length === 0 && (
+        <section className="mb-16 bg-white polaroid-shadow rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center gap-8">
+          <span className="material-symbols-outlined text-6xl text-secondary shrink-0">
+            auto_stories
+          </span>
+          <div className="flex-1 text-center md:text-left">
+            <h2 className="font-headline-md text-headline-md text-primary mb-2">
+              덕로그에 처음 오셨네요!
+            </h2>
+            <p className="font-body-md text-on-surface-variant mb-6">
+              덕로그는 아이돌·뮤지컬·스포츠 등 나의 덕질 활동을 사진과 글로 기록하고, 그 기록을 모아
+              실물 포토북으로 만들어 받아볼 수 있는 서비스예요. 먼저 기록을 하나 남겨보세요.
+            </p>
+            <div className="flex flex-wrap justify-center md:justify-start gap-3">
+              <Link
+                href="/posts/new"
+                className="px-6 py-2.5 rounded-full bg-primary text-on-primary font-label-caps shadow-sm hover:brightness-110 active:scale-95 transition-all"
+              >
+                첫 기록 남기기
+              </Link>
+              <Link
+                href="/photocards"
+                className="px-6 py-2.5 rounded-full border border-outline-variant text-on-surface-variant font-label-caps hover:bg-surface-variant/40 transition-colors"
+              >
+                포토카드 등록하기
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
         <StatCard
           label="이번 달 기록"
